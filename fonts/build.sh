@@ -113,7 +113,7 @@ build() {
   }
   export -f compress_font
 
-  if [ ! -f ./fonts-full.squashfs ] || [[ ./build.sh -nt "./fonts-full.squashfs" ]] || [[ ../utils.sh -nt "./fonts-full.squashfs" ]]; then
+  if [ ! -f ./fonts-full.squashfs ]; then
     (
       set -xeuo pipefail
       if [ -d fonts-full ]; then

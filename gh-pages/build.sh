@@ -13,7 +13,7 @@ build_extracts() {
 
 build() {
   set -xeuo pipefail
-  download_with_check \
+  download_with_check_noproxy \
     https://github.com/maps-black/naturalearthtiles-vector/releases/latest/download/naturalearth-shortbread.pmtiles \
     https://github.com/maps-black/naturalearthtiles-vector/releases/latest/download/naturalearth-protomaps.pmtiles \
     https://github.com/maps-black/naturalearthtiles-vector/releases/latest/download/naturalearth-openmaptiles.pmtiles \

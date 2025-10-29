@@ -4,7 +4,7 @@ set -xeuo pipefail
 
 build() {
   set -xeuo pipefail
-  if [ ! -f ./client.squashfs ] || [ ! -z "$(find *.{sh,js,json,html,svg,png} -newer "./client.squashfs")" ] || [[ "../utils.sh" -nt "./client.squashfs" ]]; then
+  if [ ! -f ./client.squashfs ] || [ ! -z "$(find *.{sh,js,json,html,svg,png} -newer "./client.squashfs")" ]; then
     if [ ! -d node_modules ]; then
       npm ci
     fi

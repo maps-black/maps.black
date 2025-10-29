@@ -1,19 +1,13 @@
 #!/usr/bin/env bash
 set -xeuo pipefail
-. ../utils.sh
+export SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+. $SCRIPT_DIR/../utils.sh
 
 build() {
-  # We treat rio-mbtiles differently than the other apps since it requires a venv
-  (
-    set -xeuo pipefail
-    if [ ! -d .process-naturalearth ]; then
-      mkdir -p .process-naturalearth
-      cd .process-naturalearth
-      python3 -m venv .
-      source ./bin/activate
-      pip install rio-mbtiles
-    fi
-  )
+  if [ ! -d .process-naturalearth ]; then
+    mkdir -p .process-naturalearth
+  fi
 
   (
     set -xeuo pipefail
@@ -84,7 +78,7 @@ build() {
       name="${filename/.zip/}"
       _newname="${name/Light/LIGHT}"
       newname="${_newname/Dark/DARK}"
-      if [ -f "../naturalearth-$newname-WEBP.squashfs" ] && [[ "../naturalearth-$newname-WEBP.squashfs" -nt ../build.sh ]]; then
+      if [ -f "../naturalearth-$newname-WEBP.pmtiles" ]; then
         continue
       fi
       echo "Will build $f"
@@ -113,7 +107,7 @@ build() {
       name="${filename/.zip/}"
       _newname="${name/Light/LIGHT}"
       newname="${_newname/Dark/DARK}"
-      if [ -f "../naturalearth6-$newname-WEBP.squashfs" ] && [[ "../naturalearth6-$newname-WEBP.squashfs" -nt ../build.sh ]]; then
+      if [ -f "../naturalearth6-$newname-WEBP.pmtiles" ]; then
         continue
       fi
       echo "Will build $f"
@@ -158,7 +152,7 @@ build() {
       if [ ! -f "$f" ]; then
         continue
       fi
-      source ./bin/activate
+      source $appdir/rio-mbtiles/bin/activate
       filename="${f##*/}"
       name="${filename/.tif/}"
       GDAL_CACHEMAX=4096 rio --quiet mbtiles "$f" --resampling q1 --tile-size 512 -f PNG --co ZLEVEL=1 -o "./$name.mbtiles" --zoom-levels 0..6
@@ -172,19 +166,15 @@ build() {
       mb-util --silent "./$name-PNG" "./$name-PNG.mbtiles" --image_format="png"
       rm -rf "./$name-PNG"
       pmtiles convert "./$name-PNG.mbtiles" "./$name-PNG.pmtiles"
-      mbtiles_to_squashfs "./$name-PNG.mbtiles" "./$name-PNG.squashfs" png
       mv -f "./$name-PNG.mbtiles" "../$name-PNG.mbtiles"
       mv -f "./$name-PNG.pmtiles" "../$name-PNG.pmtiles"
-      mv -f "./$name-PNG.squashfs" "../$name-PNG.squashfs"
       jq --arg format "webp" '.format = $format' ./$name-WEBP/metadata.json | sponge ./$name-WEBP/metadata.json
       parallel -j 16 --ungroup --no-notice convert_to_webp {} ::: ./$name-WEBP/*/*/*.png
       mb-util --silent "./$name-WEBP" "./$name-WEBP.mbtiles" --image_format="webp"
       rm -rf "./$name-WEBP"
       pmtiles convert "./$name-WEBP.mbtiles" "./$name-WEBP.pmtiles"
-      mbtiles_to_squashfs "./$name-WEBP.mbtiles" "./$name-WEBP.squashfs" webp
       mv -f "./$name-WEBP.mbtiles" "../$name-WEBP.mbtiles"
       mv -f "./$name-WEBP.pmtiles" "../$name-WEBP.pmtiles"
-      mv -f "./$name-WEBP.squashfs" "../$name-WEBP.squashfs"
       link_all
     done
   )

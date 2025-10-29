@@ -199,7 +199,7 @@ class MapsBlack extends HTMLElement {
   }
 
   get loader() {
-    return this.getAttribute('loader') || 'http'
+    return this.getAttribute('loader') || 'pmtiles'
   }
 
   set terrain(value) {

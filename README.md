@@ -109,6 +109,6 @@ WARNING: This will use about 5TB and take 14-20 days
 
 Running the whole build from scratch requires a somewhat beefy machine (64-128GB RM, good CPU) and around 14-20 days.
 
-To run use `./build.sh build_image` to build an image with all the tools to build the files. Prep to run with `mkdir -p /usr/local/0-9se/sites/maps.black/` and run the image with `portablectl attach --profile trusted --enable --now --no-block ./maps.black.raw`. You can view progress with `journalctl -fu maps.black-*`.
+To run use `./build.sh build_image` to build an image with all the tools to build the files. Prep to run with `mkdir -p /usr/local/lib/kxnu/sites/maps.black/` and run the image with `portablectl attach --profile trusted --enable --now --no-block ./maps.black.raw`. You can view progress with `journalctl -fu maps.black-*`.
 
 These steps do not build terrarium/s2maps since they are merely a packaged version of what is available from their upstreams. If you want to package them yourself I'm guessing you know how to download with curl and package into mbtils/pmtiles from the examples in the repo.

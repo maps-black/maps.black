@@ -1,25 +1,29 @@
 #!/usr/bin/env bash
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+export SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+export IMAGE_NAME="mapsblack"
+export SERVING_IMAGE_NAME="kxnu"
+export IMAGE_VERSION="1.0.0"
+export SERVER_IP="65.108.234.11"
 
 export appdir="$SCRIPT_DIR/apps"
 
 export PATH="$appdir:$appdir/java_upstream/bin:$PATH"
 export JAVA_HOME="$appdir/java_upstream/"
 
-export pmtilesVersion="1.27.2"
-export tippecanoeVersion="2.77.0"
-export planetilerVersion="0.8.4"
-export martinVersion="0.16.0"
+export pmtilesVersion="1.28.2"
+export tippecanoeVersion="2.79.0"
+export planetilerVersion="0.9.2"
+export martinVersion="0.18.1"
 export lakelinesVersion="12"
-export spreetVersion="0.11.0"
+export spreetVersion="0.12.1"
 export maputnikVersion="2.1.1"
 export styleSpecVersion="22.0.1"
 
-export protomapsVersion="e04e3f5e67ea5b7789716dfeb3e16a948355c05c"
 export mbutilVersion="544c76eea925e3c1bc129f601e314ea9701bfc79"
-export fontMakerVersion="9ea6884143a2683d2c5563f820fe331fe6773742"
+export fontMakerVersion="e8c510bba00ed04cc7531f375c67d677e7d66f7c"
 
-export googleFontsVersion="9c93ba3639f2d4bff91f5e7c0ede6e40e92fca79"
+export googleFontsVersion="98e020484fde1171a17950e422424dd8d5a5dbf6"
 
 export nunitoFontVersion="ad92819e6638e5b7b321c32e0d7b6d64cf5b4a94"
 export nunitoSansFontVersion="058bd7a2f33d6ad5ef1df985b3db403622016a8c"
@@ -32,7 +36,7 @@ export jostFontVersion="35f141c970538f1ed0f235789c19156b3ce2a762"
 export montserratFontVersion="cc8daf2e7085006b9c112542fc82b58afc13521d"
 export poppinsFontVersion="be5b80d711415eccf6b65aad15bced8bbb6a67a2"
 
-export IMAGE_BASE_VERSION="bookworm" # Debian 12
+export IMAGE_BASE_VERSION="trixie" # Debian 13
 
 # $1 repo
 # $2 version
@@ -63,7 +67,6 @@ check_versions() {
   check_tag https://github.com/flother/spreet.git $spreetVersion 'v*' "v"
   check_tag https://github.com/maplibre/maputnik.git $maputnikVersion 'v*' "v"
 
-  check_commit https://github.com/maps-black/basemaps.git $protomapsVersion
   check_commit https://github.com/maplibre/font-maker.git $fontMakerVersion
   check_commit https://github.com/mapbox/mbutil.git $mbutilVersion
 
@@ -82,6 +85,7 @@ check_versions() {
 }
 export -f check_versions
 
+# TODO: Remove
 systemd_units() {
   set -xeuo pipefail
   publicDir="$SCRIPT_DIR/public"
@@ -175,6 +179,7 @@ EOF
 }
 export -f systemd_units
 
+# TODO: Remove
 unmount_unlink_all() {
   set -xeuo pipefail
   systemdDir="$SCRIPT_DIR/systemd"
@@ -190,6 +195,7 @@ unmount_unlink_all() {
 }
 export -f unmount_unlink_all
 
+# TODO: Remove after restructure to not have separate dirs
 link_all() {
   (
     set -xeuo pipefail
@@ -225,7 +231,7 @@ download_with_check() {
   set -xeuo pipefail
   for url in "$@"; do
     filename="${url##*/}"
-    if curl --remote-time --fail --silent --time-cond "$filename" -L -o "./.$filename" "$url"; then
+    if curl --unix-socket $SCRIPT_DIR/../../runtime/nginx-forward.sock --remote-time --fail --silent --time-cond "$filename" -L -o "./.$filename" "$url"; then
       [ -f "./.$filename" ] && mv -f "./.$filename" "$filename" || true
     else
       echo "failed downloading $url"
@@ -234,6 +240,20 @@ download_with_check() {
 }
 export -f download_with_check
 
+download_with_check_noproxy() {
+  set -xeuo pipefail
+  for url in "$@"; do
+    filename="${url##*/}"
+    if curl --remote-time --fail --silent --time-cond "$filename" -L -o "./.$filename" "$url"; then
+      [ -f "./.$filename" ] && mv -f "./.$filename" "$filename" || true
+    else
+      echo "failed downloading $url"
+    fi
+  done
+}
+export -f download_with_check_noproxy
+
+# TODO: Remove
 workdisk_prep() {
   if [ ! -d "$SCRIPT_DIR/workdisk" ]; then
     mkdir -p "$SCRIPT_DIR/workdisk"
@@ -261,6 +281,7 @@ EOF
 }
 export -f workdisk_prep
 
+# TODO: Remove
 mbtiles_to_squashfs() {
   set -xeuo pipefail
   if [ ! -d "$SCRIPT_DIR/workdisk" ]; then
@@ -287,6 +308,7 @@ mbtiles_to_squashfs() {
 }
 export -f mbtiles_to_squashfs
 
+# TODO: Remove
 mbtiles_to_erofs() {
   set -xeuo pipefail
   input="$1"
@@ -319,53 +341,78 @@ build_image() {
   debootstrap --variant=minbase "${IMAGE_BASE_VERSION}" /tmp/maps.black/
 
   mount --bind /proc /tmp/maps.black/proc
-  mkdir -p /tmp/maps.black/usr/local/0-9se/sites/maps.black /tmp/maps.black/usr/local/0-9se/sites/.maps.black
-  cp -r ./* /tmp/maps.black/usr/local/0-9se/sites/.maps.black/
-  rm -f /tmp/maps.black/usr/local/0-9se/sites/.maps.black/maps.black.raw
+  mkdir -p /tmp/maps.black/usr/local/lib/${SERVING_IMAGE_NAME}/sites/maps.black /tmp/maps.black/usr/local/lib/${SERVING_IMAGE_NAME}/sites/.maps.black /tmp/maps.black/usr/local/lib/${SERVING_IMAGE_NAME}/runtime
+  cp -r ./* /tmp/maps.black/usr/local/lib/${SERVING_IMAGE_NAME}/sites/.maps.black/
+  rm -f /tmp/maps.black/usr/local/lib/${SERVING_IMAGE_NAME}/sites/.maps.black/${IMAGE_NAME}_${IMAGE_VERSION}.raw
 
   chroot /tmp/maps.black /bin/bash -c "
 set -xeuo pipefail
 apt update && apt upgrade -y
-apt install -y ca-certificates systemd curl python3 python-is-python3 python3-venv libgeos-dev squashfs-tools erofs-utils build-essential libboost-all-dev cmake clang libfreetype-dev parallel unzip zip moreutils optipng sqlite3 jq uuid-runtime gcc g++ make libsqlite3-dev zlib1g-dev pngquant webp tmux git gdal-bin fonttools pkg-config brotli rsync btrfs-progs
+apt install -y locales ca-certificates systemd curl python3 python-is-python3 python3-venv libgeos-dev squashfs-tools erofs-utils build-essential libboost-all-dev cmake clang libfreetype-dev parallel unzip zip moreutils optipng sqlite3 jq uuid-runtime gcc g++ make libsqlite3-dev zlib1g-dev pngquant webp tmux git gdal-bin fonttools pkg-config brotli rsync btrfs-progs
+
+# TODO: This needs to be globalized into base settings for all device types
+echo 'C.UTF-8 UTF-8' >> /etc/locale.gen
+echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen
+echo 'en_GB.UTF-8 UTF-8' >> /etc/locale.gen
+locale-gen
+# en_GB chosen as it uses metric but is still english
+update-locale LANG=en_GB.UTF-8
 
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 . "/root/.cargo/env"
 cargo install oxipng
 
-curl --proto '=https' --tlsv1.2 -sSf -L https://deb.nodesource.com/setup_23.x | sh
+curl --proto '=https' --tlsv1.2 -sSf -L https://deb.nodesource.com/setup_24.x | sh
 apt install -y nodejs
-cd /usr/local/0-9se/sites/.maps.black/apps/ && . ./build.sh && build
-cd /usr/local/0-9se/sites/.maps.black/client/ && npm ci
-cd /usr/local/0-9se/sites/.maps.black/naturalearth-vector/ && npm ci
+
+(
+  set -xeuo pipefail
+  # Include rust in path in builder container
+  export HOME="/root/"
+  . "/root/.cargo/env"
+  SCRIPT_DIR=/usr/local/lib/${SERVING_IMAGE_NAME}/sites/.maps.black/
+  cd \$SCRIPT_DIR
+  (cd apps/ && . \$SCRIPT_DIR/apps/build.sh && build)
+  # TODO: Reactivate
+  (cd tilejson/ && . \$SCRIPT_DIR/tilejson/build.sh && build)
+  (cd client/ && . \$SCRIPT_DIR/client/build.sh && build)
+  (cd styles/ && . \$SCRIPT_DIR/styles/build.sh && build)
+  # (cd fonts/ && . \$SCRIPT_DIR/fonts/build.sh && build)
+  # (cd resourcetiles/ && . \$SCRIPT_DIR/resourcetiles/build.sh && build)
+)
+
 apt clean autoclean && apt autoremove --yes && rm -rf /var/lib/apt/lists/*
 "
   umount /tmp/maps.black/proc || true
   touch /tmp/maps.black/etc/machine-id /tmp/maps.black/etc/resolv.conf
 
-  cat >"/tmp/maps.black/etc/systemd/system/maps.black-build.service" <<EOF
+  cat >"/tmp/maps.black/etc/systemd/system/${IMAGE_NAME}-build.service" <<EOF
 [Unit]
 Description="maps.black build"
 After=network-online.target
 Requires=network-online.target
 
 [Service]
+PrivateNetwork=yes
 Type=oneshot
-BindPaths=/usr/local/0-9se/sites/maps.black
-WorkingDirectory=/usr/local/0-9se/sites/maps.black
-ExecStart=/usr/local/0-9se/sites/.maps.black/build.sh prep
-ExecStart=/usr/local/0-9se/sites/maps.black/build.sh build
+Environment=SERVING_IMAGE_NAME=${SERVING_IMAGE_NAME}
+Environment=VIRTUALENV_OVERRIDE_APP_DATA=/usr/local/lib/${SERVING_IMAGE_NAME}/sites/maps.black/.venv-cache/
+BindPaths=/usr/local/lib/${SERVING_IMAGE_NAME}/sites/maps.black /usr/local/lib/${SERVING_IMAGE_NAME}/runtime
+WorkingDirectory=/usr/local/lib/${SERVING_IMAGE_NAME}/sites/maps.black
+ExecStart=/usr/local/lib/${SERVING_IMAGE_NAME}/sites/.maps.black/build.sh build
+User=${SERVING_IMAGE_NAME}
 
 [Install]
 WantedBy=multi-user.target
 EOF
-  cat >"/tmp/maps.black/etc/systemd/system/maps.black-build.timer" <<EOF
+  cat >"/tmp/maps.black/etc/systemd/system/${IMAGE_NAME}-build.timer" <<EOF
 [Unit]
 Description="maps.black build timer"
 After=network-online.target
 Requires=network-online.target
 
 [Timer]
-OnCalendar=monthly
+OnCalendar=daily
 Persistent=true
 
 [Install]
@@ -373,10 +420,29 @@ WantedBy=timers.target
 EOF
 
   # Package the files
-  rm -f ./maps.black.raw
+  rm -f ./${IMAGE_NAME}_${IMAGE_VERSION}.raw
   find /tmp/maps.black/ -type d -exec chmod 777 {} \;
-  mksquashfs /tmp/maps.black/ ./maps.black.raw -comp zstd -no-xattrs -all-root -info -progress -no-exports -Xcompression-level 6
+  mksquashfs /tmp/maps.black/ ./${IMAGE_NAME}_${IMAGE_VERSION}.raw -comp zstd -no-xattrs -all-root -info -progress -no-exports -Xcompression-level 6
   rm -rf /tmp/maps.black/
-  du -sh --apparent-size ./maps.black.raw
+  du -sh --apparent-size ./${IMAGE_NAME}_${IMAGE_VERSION}.raw
 }
 export -f build_image
+
+upload_project_run() {
+  rsync --progress -avH --delete --inplace --no-whole-file ./ root@$SERVER_IP:/root/${IMAGE_NAME}/
+  ssh root@$SERVER_IP <<ENDSSH
+cd /root/${IMAGE_NAME}/
+./build.sh run_all_local
+ENDSSH
+}
+export -f upload_project_run
+
+run_all_local() {
+  ./build.sh build_image
+  portablectl detach --now ${IMAGE_NAME}_${IMAGE_VERSION} || true
+  mkdir -p /usr/local/lib/portables
+  mv -f ./${IMAGE_NAME}_${IMAGE_VERSION}.raw /usr/local/lib/portables/${IMAGE_NAME}_${IMAGE_VERSION}.raw
+  portablectl attach --profile trusted --enable --now --no-block ${IMAGE_NAME}_${IMAGE_VERSION}
+  journalctl -fu ${IMAGE_NAME}*
+}
+export -f run_all_local

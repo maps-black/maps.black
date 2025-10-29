@@ -1,28 +1,27 @@
 #! /usr/bin/env bash
 set -xeuo pipefail
-. ../utils.sh
+export LOCAL_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+. $LOCAL_SCRIPT_DIR/../utils.sh
 
 build() {
   set -xeuo pipefail
   maxZoom="${maxZoom:-8}"
 
-  if [[ ./build.sh -nt "./naturalearth-protomaps.squashfs" ]]; then
+  # TODO: Check how this check should work
+  if [[ ./build.sh -nt "./naturalearth-protomaps.pmtiles" ]]; then
     return 0
   fi
 
-  if [ ! -d node_modules ]; then
-    npm ci
-  fi
-
   if [ ! -d natural_earth_vector ]; then
-    curl -LO https://naciscdn.org/naturalearth/packages/natural_earth_vector.zip
+    curl --unix-socket $SCRIPT_DIR/../../runtime/nginx-forward.sock -LO https://naciscdn.org/naturalearth/packages/natural_earth_vector.zip
     mkdir -p natural_earth_vector
     unzip natural_earth_vector.zip -d natural_earth_vector
     rm -rf natural_earth_vector.zip
   fi
 
   if [ ! -d World-Base-Map-Shapefiles ]; then
-    curl -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0' -LO https://www.shadedrelief.com/ne-draft/World-Base-Map-Shapefiles.zip
+    curl --unix-socket $SCRIPT_DIR/../../runtime/nginx-forward.sock -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0' -LO https://www.shadedrelief.com/ne-draft/World-Base-Map-Shapefiles.zip
     mkdir -p World-Base-Map-Shapefiles
     unzip World-Base-Map-Shapefiles.zip -d World-Base-Map-Shapefiles
     rm -rf World-Base-Map-Shapefiles.zip
@@ -51,7 +50,7 @@ build() {
   done
 
   if [ ! -f wikidata.json ]; then
-    ./download_wikidata_translations.js
+    $LOCAL_SCRIPT_DIR/download_wikidata_translations.js
   fi
 
   if [ ! -f ne6.mbtiles ]; then
@@ -722,8 +721,8 @@ name_zht
         jq -r '.features = (.features | map(.properties.iata = .properties.iata_code))' $schema-geojsonprep/$source.json | sponge $schema-geojsonprep/$source.json
       fi
 
-      ./add_way_area.js $schema-geojsonprep/$source.json
-      ./add_wikidata_languages.js $schema-geojsonprep/$source.json
+      $LOCAL_SCRIPT_DIR/add_way_area.js $schema-geojsonprep/$source.json
+      $LOCAL_SCRIPT_DIR/add_wikidata_languages.js $schema-geojsonprep/$source.json
     fi
   }
 
@@ -1379,7 +1378,7 @@ name_zht
     if [ ! -f "$schema-points/$name-$source.json" ] && jq -e '.features[0]' "$schema-geojsonprep/$source.json" >/dev/null; then
       tippecanoe -r1 --no-progress-indicator -Z5 -z5 -o "$schema-points/$name-$source.mbtiles" --convert-polygons-to-label-points $(includeFlags $schema) -l "$name" --set-attribute="$additionalAttributes" "$schema-geojsonprep/$source.json"
       tippecanoe-decode -c "$schema-points/$name-$source.mbtiles" | jq -s >"$schema-points/$name-$source.json"
-      ./snakecase.js "$schema-points/$name-$source"
+      $LOCAL_SCRIPT_DIR/snakecase.js "$schema-points/$name-$source"
     fi
   }
 
@@ -1396,17 +1395,11 @@ name_zht
   fi
   # End planetilershortbread
 
-  # Package into pmtiles and squashfs
+  # Package into pmtiles
   for mbtiles in *.mbtiles; do
     pathExtLess="${mbtiles/.mbtiles/}"
     if [ ! -f $pathExtLess.pmtiles ]; then
       pmtiles convert $pathExtLess.mbtiles $pathExtLess.pmtiles
-    fi
-    if [ ! -f $pathExtLess.squashfs ]; then
-      mb-util --silent $pathExtLess.mbtiles $pathExtLess --image_format="pbf"
-      find $pathExtLess/ -type d -exec chmod 777 {} \;
-      mksquashfs $pathExtLess/ $pathExtLess.squashfs -exit-on-error -quiet -noD -comp zstd -Xcompression-level 6 -fstime 0 -all-time 0 -no-xattrs -all-root -no-progress -no-exports -mem 8G
-      rm -rf $pathExtLess
     fi
     link_all
   done

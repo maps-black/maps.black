@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -xeuo pipefail
-. ../utils.sh
+export LOCAL_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+. $LOCAL_SCRIPT_DIR/../utils.sh
 
 build() {
   set -xeuo pipefail
@@ -34,7 +36,7 @@ build() {
       -Dcasc.yaml.max.aliases="1000" \
       -jar $appdir/planetiler.jar \
       generate-custom \
-      --schema=./shortbread.yml \
+      --schema=$LOCAL_SCRIPT_DIR/shortbread.yml \
       --osm-path=./planet-latest.osm.pbf \
       --admin-points-path="./planetilershortbread.zip" \
       --lake-centerlines-path="./lake_centerline.shp.zip" \
@@ -109,13 +111,4 @@ build() {
     pmtiles convert ./openstreetmap-protomaps.mbtiles ./.openstreetmap-protomaps.pmtiles &&
       mv -f ./.openstreetmap-protomaps.pmtiles ./openstreetmap-protomaps.pmtiles
   fi
-
-  for schema in shortbread openmaptiles protomaps; do
-    if [ ! -f ./openstreetmap-${schema}.squashfs ] || [[ ./openstreetmap-${schema}.mbtiles -nt ./openstreetmap-${schema}.squashfs ]]; then
-      rm -f ./.openstreetmap-${schema}.squashfs
-      mbtiles_to_squashfs ./openstreetmap-${schema}.mbtiles ./.openstreetmap-${schema}.squashfs pbf
-      mv -f ./.openstreetmap-${schema}.squashfs ./openstreetmap-${schema}.squashfs
-      link_all
-    fi
-  done
 }

@@ -480,7 +480,7 @@ old_build() {
 }
 
 build() {
-  if [ ! -f ./styles.squashfs ] || [[ ./build.sh -nt "./styles.squashfs" ]]; then
+  if [ ! -f ./styles.squashfs ]; then
     (
       set -xeuo pipefail
       shopt -s globstar

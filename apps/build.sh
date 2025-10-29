@@ -17,7 +17,7 @@ build() {
     (
       mkdir -p ./pmtiles_upstream
       cd ./pmtiles_upstream
-      download_with_check https://github.com/protomaps/go-pmtiles/releases/download/v${pmtilesVersion}/go-pmtiles_${pmtilesVersion}_Linux_x86_64.tar.gz
+      download_with_check_noproxy https://github.com/protomaps/go-pmtiles/releases/download/v${pmtilesVersion}/go-pmtiles_${pmtilesVersion}_Linux_x86_64.tar.gz
       tar xzvf go-pmtiles_${pmtilesVersion}_Linux_x86_64.tar.gz
       cp ./pmtiles ../pmtiles
     )
@@ -40,7 +40,7 @@ build() {
     (
       mkdir -p martin_upstream
       cd martin_upstream
-      download_with_check https://github.com/maplibre/martin/releases/download/v${martinVersion}/martin-x86_64-unknown-linux-gnu.tar.gz
+      download_with_check_noproxy https://github.com/maplibre/martin/releases/download/v${martinVersion}/martin-x86_64-unknown-linux-gnu.tar.gz
       tar xzvf martin-x86_64-unknown-linux-gnu.tar.gz
       cp ./martin ../martin
       cp ./mbtiles ../mbtiles
@@ -64,7 +64,7 @@ build() {
     (
       mkdir -p spreet_upstream
       cd spreet_upstream
-      download_with_check https://github.com/flother/spreet/releases/download/v${spreetVersion}/spreet-x86_64-unknown-linux-musl.tar.gz
+      download_with_check_noproxy https://github.com/flother/spreet/releases/download/v${spreetVersion}/spreet-x86_64-unknown-linux-musl.tar.gz
       tar xzvf spreet-x86_64-unknown-linux-musl.tar.gz
       mv ./spreet ../spreet
     )
@@ -75,7 +75,7 @@ build() {
     (
       mkdir -p maputnik
       cd maputnik
-      download_with_check https://github.com/maplibre/maputnik/releases/download/v${maputnikVersion}/dist.zip
+      download_with_check_noproxy https://github.com/maplibre/maputnik/releases/download/v${maputnikVersion}/dist.zip
       unzip dist.zip
     )
   fi
@@ -84,13 +84,14 @@ build() {
     (
       mkdir -p maputnik-desktop
       cd maputnik-desktop
-      download_with_check https://github.com/maplibre/maputnik/releases/download/v${maputnikVersion}/desktop.zip
+      download_with_check_noproxy https://github.com/maplibre/maputnik/releases/download/v${maputnikVersion}/desktop.zip
       unzip desktop.zip
     )
   fi
 
   if [ ! -d ./java_upstream ]; then
     (
+      # TODO: Version-check
       curl -LO https://download.java.net/java/GA/jdk23.0.1/c28985cbf10d4e648e4004050f8781aa/11/GPL/openjdk-23.0.1_linux-x64_bin.tar.gz
       mkdir -p java_upstream && tar --directory java_upstream --strip-components 1 -xzvf openjdk-23.0.1_linux-x64_bin.tar.gz && rm -f openjdk-23.0.1_linux-x64_bin.tar.gz
     )
@@ -102,8 +103,9 @@ build() {
 
   if [ ! -d ./maven_upstream ]; then
     (
-      curl -LO https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
-      mkdir -p maven_upstream && tar --directory maven_upstream --strip-components 1 -xzvf apache-maven-3.9.9-bin.tar.gz && rm -f apache-maven-3.9.9-bin.tar.gz
+      # TODO: Version-check
+      curl -LO https://dlcdn.apache.org/maven/maven-3/3.9.11/binaries/apache-maven-3.9.11-bin.tar.gz
+      mkdir -p maven_upstream && tar --directory maven_upstream --strip-components 1 -xzvf apache-maven-3.9.11-bin.tar.gz && rm -f apache-maven-3.9.11-bin.tar.gz
     )
   fi
 
@@ -113,7 +115,7 @@ build() {
 
   if [ ! -f ./planetiler.jar ]; then
     (
-      download_with_check https://github.com/onthegomap/planetiler/releases/download/v${planetilerVersion}/planetiler.jar
+      download_with_check_noproxy https://github.com/onthegomap/planetiler/releases/download/v${planetilerVersion}/planetiler.jar
     )
   fi
 
@@ -137,7 +139,7 @@ build() {
         # Fork to limit zoom level to 14, add languages
         git clone --recurse-submodules --quiet https://github.com/maps-black/basemaps.git protomaps-basemaps
         cd protomaps-basemaps
-        git reset ${protomapsVersion} --hard
+        git checkout add-languages
       )
     fi
     (
@@ -164,5 +166,14 @@ build() {
     ln -fs npm-packages/node_modules/.bin/gl-style-format gl-style-format
     ln -fs npm-packages/node_modules/.bin/gl-style-migrate gl-style-migrate
     ln -fs npm-packages/node_modules/.bin/gl-style-validate gl-style-validate
+  fi
+
+  if [ ! -d rio-mbtiles ]; then
+    mkdir -p rio-mbtiles
+    cd rio-mbtiles
+    python3 -m venv .
+    source ./bin/activate
+    # TODO: Version-check
+    pip install rio-mbtiles==1.6.0
   fi
 }
