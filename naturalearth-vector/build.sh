@@ -14,14 +14,14 @@ build() {
   fi
 
   if [ ! -d natural_earth_vector ]; then
-    curl --unix-socket $SCRIPT_DIR/../../runtime/nginx-forward.sock -LO https://naciscdn.org/naturalearth/packages/natural_earth_vector.zip
+    curl --unix-socket $SCRIPT_DIR/../../runtime/nginx-forward.sock -LO http://naciscdn.org/naturalearth/packages/natural_earth_vector.zip
     mkdir -p natural_earth_vector
     unzip natural_earth_vector.zip -d natural_earth_vector
     rm -rf natural_earth_vector.zip
   fi
 
   if [ ! -d World-Base-Map-Shapefiles ]; then
-    curl --unix-socket $SCRIPT_DIR/../../runtime/nginx-forward.sock -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0' -LO https://www.shadedrelief.com/ne-draft/World-Base-Map-Shapefiles.zip
+    curl --unix-socket $SCRIPT_DIR/../../runtime/nginx-forward.sock -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0' -LO http://www.shadedrelief.com/ne-draft/World-Base-Map-Shapefiles.zip
     mkdir -p World-Base-Map-Shapefiles
     unzip World-Base-Map-Shapefiles.zip -d World-Base-Map-Shapefiles
     rm -rf World-Base-Map-Shapefiles.zip

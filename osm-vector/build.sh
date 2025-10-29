@@ -6,27 +6,27 @@ export LOCAL_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null 
 
 build() {
   set -xeuo pipefail
-  download_with_check https://planet.openstreetmap.org/pbf/planet-latest.osm.pbf
+  download_with_check http://planet.openstreetmap.org/pbf/planet-latest.osm.pbf
 
   # These are infrequently updated, so we skip checking them every run
   if [ ! -f lake_centerline.shp.zip ]; then
-    download_with_check https://github.com/acalcutt/osm-lakelines/releases/download/v${lakelinesVersion}/lake_centerline.shp.zip
+    download_with_check http://github.com/acalcutt/osm-lakelines/releases/download/v${lakelinesVersion}/lake_centerline.shp.zip
   fi
 
   if [ ! -f water-polygons-split-3857.zip ]; then
-    download_with_check https://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip
+    download_with_check http://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip
   fi
 
   if [ ! -f natural_earth_vector.sqlite.zip ]; then
-    download_with_check https://naciscdn.org/naturalearth/packages/natural_earth_vector.sqlite.zip
+    download_with_check http://naciscdn.org/naturalearth/packages/natural_earth_vector.sqlite.zip
   fi
 
   if [ ! -f planetilershortbread.zip ]; then
-    download_with_check https://github.com/maps-black/naturalearthtiles-vector/releases/latest/download/planetilershortbread.zip
+    download_with_check http://github.com/maps-black/naturalearthtiles-vector/releases/latest/download/planetilershortbread.zip
   fi
 
   if [ ! -f top_osm_tiles.tsv.gz ]; then
-    download_with_check https://raw.githubusercontent.com/onthegomap/planetiler/main/layerstats/top_osm_tiles.tsv.gz
+    download_with_check http://raw.githubusercontent.com/onthegomap/planetiler/main/layerstats/top_osm_tiles.tsv.gz
   fi
 
   if [ ! -f ./openstreetmap-shortbread.mbtiles ] || [[ ./planet-latest.osm.pbf -nt ./openstreetmap-shortbread.mbtiles ]]; then
