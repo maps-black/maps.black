@@ -26,6 +26,5 @@ build() {
     mksquashfs ./client ./.client.squashfs -exit-on-error -quiet -noD -comp zstd -Xcompression-level 6 -fstime 0 -all-time 0 -no-xattrs -all-root -no-progress -no-exports &&
       mv -f ./.client.squashfs ./client.squashfs
     rm -rf client
-    link_all
   fi
 }

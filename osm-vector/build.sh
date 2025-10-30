@@ -32,7 +32,8 @@ build() {
   if [ ! -f ./openstreetmap-shortbread.mbtiles ] || [[ ./planet-latest.osm.pbf -nt ./openstreetmap-shortbread.mbtiles ]]; then
     rm -f ./.openstreetmap-shortbread.mbtiles
     rm -rf data && mkdir -p data/sources
-    java -Xmx100g \
+    # TODO: This requires internet access since it downloads wikidata, figure out how to proxy it
+    java -Xmx60g \
       -Dcasc.yaml.max.aliases="1000" \
       -jar $appdir/planetiler.jar \
       generate-custom \
@@ -62,7 +63,7 @@ build() {
   if [ ! -f ./openstreetmap-openmaptiles.mbtiles ] || [[ ./planet-latest.osm.pbf -nt ./openstreetmap-openmaptiles.mbtiles ]]; then
     rm -f ./.openstreetmap-openmaptiles.mbtiles
     rm -rf data && mkdir -p data/sources
-    java -Xmx100g \
+    java -Xmx60g \
       -jar $appdir/planetiler-openmaptiles.jar \
       --osm-path=./planet-latest.osm.pbf \
       --admin-points-path="./planetilershortbread.zip" \
@@ -89,7 +90,7 @@ build() {
   if [ ! -f ./openstreetmap-protomaps.mbtiles ] || [[ ./planet-latest.osm.pbf -nt ./openstreetmap-protomaps.mbtiles ]]; then
     rm -f ./.openstreetmap-protomaps.mbtiles
     rm -rf data && mkdir -p data/sources
-    java -Xmx100g \
+    java -Xmx60g \
       -jar $appdir/planetiler-protomaps.jar \
       --osm-path=./planet-latest.osm.pbf \
       --admin-points-path="./planetilershortbread.zip" \

@@ -77,7 +77,6 @@ build() {
           rm -rf ./tilejson
         fi
         rm -rf ./resourcetiles$sizeVariant-upper ./resourcetiles$sizeVariant-work
-        link_all
       fi
     done
   )

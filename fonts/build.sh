@@ -317,7 +317,6 @@ build() {
       mksquashfs ./fonts$sizeVariant ./.fonts$sizeVariant.squashfs -exit-on-error -quiet -noD -comp zstd -Xcompression-level 6 -fstime 0 -all-time 0 -no-xattrs -all-root -no-progress &&
         mv -f ./.fonts$sizeVariant.squashfs ./fonts$sizeVariant.squashfs
       rm -rf ./fonts$sizeVariant
-      link_all
     done
   fi
 
@@ -357,7 +356,6 @@ build() {
       mksquashfs ./fontsprep$sizeVariant ./.fontsprep$sizeVariant.squashfs -exit-on-error -quiet -noD -comp zstd -Xcompression-level 6 -fstime 0 -all-time 0 -no-xattrs -all-root -no-progress &&
         mv -f ./.fontsprep$sizeVariant.squashfs ./fontsprep$sizeVariant.squashfs
       rm -rf ./fontsprep$sizeVariant
-      link_all
     fi
   done
 }

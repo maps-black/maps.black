@@ -50,7 +50,8 @@ build() {
   done
 
   if [ ! -f wikidata.json ]; then
-    $LOCAL_SCRIPT_DIR/download_wikidata_translations.js
+    # TODO: Set in utils and reuse in all places
+    NGINX_SOCKET="$SCRIPT_DIR/../../runtime/nginx-forward.sock" $LOCAL_SCRIPT_DIR/download_wikidata_translations.js
   fi
 
   if [ ! -f ne6.mbtiles ]; then
@@ -1401,7 +1402,6 @@ name_zht
     if [ ! -f $pathExtLess.pmtiles ]; then
       pmtiles convert $pathExtLess.mbtiles $pathExtLess.pmtiles
     fi
-    link_all
   done
 
   # TODO: not all languages included? Stockholm has 348 in openmaptiles, shortbread has 268

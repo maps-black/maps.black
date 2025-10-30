@@ -11,14 +11,13 @@ build() {
   export HOME="/root/"
   . "/root/.cargo/env"
 
-  mkdir -p tilejson client styles fonts resourcetiles naturalearth-raster naturalearth-vector osm-vector gh-pages
+  mkdir -p tilejson client styles fonts resourcetiles naturalearth-raster naturalearth-vector osm-vector gh-pages public
 
-  # TODO: Reactivate
-  # cp $SCRIPT_DIR/fonts/fonts-*.squashfs ./fonts/
-  cp $SCRIPT_DIR/tilejson/*.squashfs ./tilejson/
-  cp $SCRIPT_DIR/client/*.squashfs ./client/
-  cp $SCRIPT_DIR/styles/*.squashfs ./styles/
-  # cp $SCRIPT_DIR/resourcetiles/*.pmtiles ./resourcetiles/
+  cp -f $SCRIPT_DIR/tilejson/*.squashfs ./tilejson/
+  cp -f $SCRIPT_DIR/client/*.squashfs ./client/
+  cp -f $SCRIPT_DIR/styles/*.squashfs ./styles/
+  cp -f $SCRIPT_DIR/fonts/fonts-*.squashfs ./fonts/
+  cp -f $SCRIPT_DIR/resourcetiles/*.pmtiles ./resourcetiles/
 
   (cd naturalearth-raster/ && . $SCRIPT_DIR/naturalearth-raster/build.sh && build)
   (cd naturalearth-vector/ && . $SCRIPT_DIR/naturalearth-vector/build.sh && build)

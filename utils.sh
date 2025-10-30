@@ -199,7 +199,7 @@ export -f unmount_unlink_all
 link_all() {
   (
     set -xeuo pipefail
-    cd "$SCRIPT_DIR"
+    cd "$SCRIPT_DIR/../maps.black"
     # Create symlinks to all the archives created
     for f in ./*/*.{mbtiles,pmtiles,squashfs}; do
       if [ ! -f "$f" ]; then
@@ -373,12 +373,12 @@ apt install -y nodejs
   SCRIPT_DIR=/usr/local/lib/${SERVING_IMAGE_NAME}/sites/.maps.black/
   cd \$SCRIPT_DIR
   (cd apps/ && . \$SCRIPT_DIR/apps/build.sh && build)
-  # TODO: Reactivate
+  (cd naturalearth-vector && npm ci)
   (cd tilejson/ && . \$SCRIPT_DIR/tilejson/build.sh && build)
   (cd client/ && . \$SCRIPT_DIR/client/build.sh && build)
   (cd styles/ && . \$SCRIPT_DIR/styles/build.sh && build)
-  # (cd fonts/ && . \$SCRIPT_DIR/fonts/build.sh && build)
-  # (cd resourcetiles/ && . \$SCRIPT_DIR/resourcetiles/build.sh && build)
+  (cd fonts/ && . \$SCRIPT_DIR/fonts/build.sh && build)
+  (cd resourcetiles/ && . \$SCRIPT_DIR/resourcetiles/build.sh && build)
 )
 
 apt clean autoclean && apt autoremove --yes && rm -rf /var/lib/apt/lists/*
@@ -393,7 +393,8 @@ After=network-online.target
 Requires=network-online.target
 
 [Service]
-PrivateNetwork=yes
+# TODO: Reactivate this after you have solved the wikidata download from within planetiler. Since it is part of the java binary you might need to change how the download works and recompile
+# PrivateNetwork=yes
 Type=oneshot
 Environment=SERVING_IMAGE_NAME=${SERVING_IMAGE_NAME}
 Environment=VIRTUALENV_OVERRIDE_APP_DATA=/usr/local/lib/${SERVING_IMAGE_NAME}/sites/maps.black/.venv-cache/

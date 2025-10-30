@@ -1,6 +1,14 @@
 #! /usr/bin/env node
 import fs from 'fs/promises'
 
+import { Agent } from 'undici';
+
+const dispatcher = new Agent({
+  connect: {
+    socketPath: process.env.NGINX_SOCKET
+  }
+})
+
 let ids = []
 
 // TODO: Add qrank as a sorting option for styles
@@ -23,7 +31,8 @@ for await (const dirent of await fs.opendir('geojson-ne6/')) {
 
 ids = [...new Set(ids)]
 
-const result = await fetch('https://query.wikidata.org/bigdata/namespace/wdq/sparql', {
+const result = await fetch('http://query.wikidata.org/bigdata/namespace/wdq/sparql', {
+  dispatcher,
   method: 'POST',
   headers: {
     accept: 'application/sparql-results+json',
@@ -37,7 +46,8 @@ const result = await fetch('https://query.wikidata.org/bigdata/namespace/wdq/spa
 })
 
 // These should probably be P1705, but we have a few (~10) that have P1559 but not P1705
-const nativeNames = await fetch('https://query.wikidata.org/bigdata/namespace/wdq/sparql', {
+const nativeNames = await fetch('http://query.wikidata.org/bigdata/namespace/wdq/sparql', {
+  dispatcher,
   method: 'POST',
   headers: {
     accept: 'application/sparql-results+json',
@@ -50,7 +60,8 @@ const nativeNames = await fetch('https://query.wikidata.org/bigdata/namespace/wd
   return res.json()
 })
 
-const nativeLabels = await fetch('https://query.wikidata.org/bigdata/namespace/wdq/sparql', {
+const nativeLabels = await fetch('http://query.wikidata.org/bigdata/namespace/wdq/sparql', {
+  dispatcher,
   method: 'POST',
   headers: {
     accept: 'application/sparql-results+json',
@@ -75,7 +86,7 @@ let translations = result.results.bindings.reduce((p,c) => {
   return p
 }, {})
 
-// TODO: Include all of these separated by slash? Seems to be like that in https://maplibre.org/maplibre-gl-js/docs/examples/display-and-style-rich-text-labels/
+// TODO: Include all of these separated by slash? Seems to be like that in http://maplibre.org/maplibre-gl-js/docs/examples/display-and-style-rich-text-labels/
 translations = nativeNames.results.bindings.reduce((p,c) => {
   const id = c.id.value.replace('http://www.wikidata.org/entity/', '')
   const lang = c.nativeLabel['xml:lang']

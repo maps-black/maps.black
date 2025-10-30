@@ -12,10 +12,12 @@ args:
 sources:
   ocean:
     type: shapefile
+    # TODO: Get from local
     url: https://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip
   admin_points:
     type: shapefile
-    url: https://github.com/maps-black/ne-vector/releases/download/v0.0.0/planetilershortbread.zip
+    # TODO: Get from local
+    url: http://github.com/maps-black/naturalearthtiles-vector/releases/latest/download/planetilershortbread.zip
   osm:
     type: osm
     url: '${ args.osm_url }'

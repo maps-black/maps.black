@@ -175,7 +175,6 @@ build() {
       pmtiles convert "./$name-WEBP.mbtiles" "./$name-WEBP.pmtiles"
       mv -f "./$name-WEBP.mbtiles" "../$name-WEBP.mbtiles"
       mv -f "./$name-WEBP.pmtiles" "../$name-WEBP.pmtiles"
-      link_all
     done
   )
 }
