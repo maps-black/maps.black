@@ -337,10 +337,12 @@ export -f mbtiles_to_erofs
 build_image() {
   set -xeuo pipefail
   umount /tmp/maps.black/proc || true
+  umount /tmp/maps.black/dev || true
   rm -rf /tmp/maps.black/
   debootstrap --variant=minbase "${IMAGE_BASE_VERSION}" /tmp/maps.black/
 
   mount --bind /proc /tmp/maps.black/proc
+  mount --bind /dev /tmp/maps.black/dev
   mkdir -p /tmp/maps.black/usr/local/lib/${SERVING_IMAGE_NAME}/sites/maps.black /tmp/maps.black/usr/local/lib/${SERVING_IMAGE_NAME}/sites/.maps.black /tmp/maps.black/usr/local/lib/${SERVING_IMAGE_NAME}/runtime
   cp -r ./* /tmp/maps.black/usr/local/lib/${SERVING_IMAGE_NAME}/sites/.maps.black/
   rm -f /tmp/maps.black/usr/local/lib/${SERVING_IMAGE_NAME}/sites/.maps.black/${IMAGE_NAME}_${IMAGE_VERSION}.raw
@@ -384,6 +386,7 @@ apt install -y nodejs
 apt clean autoclean && apt autoremove --yes && rm -rf /var/lib/apt/lists/*
 "
   umount /tmp/maps.black/proc || true
+  umount /tmp/maps.black/dev || true
   touch /tmp/maps.black/etc/machine-id /tmp/maps.black/etc/resolv.conf
 
   cat >"/tmp/maps.black/etc/systemd/system/${IMAGE_NAME}-build.service" <<EOF

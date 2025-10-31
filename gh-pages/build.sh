@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -xeuo pipefail
-. ../utils.sh
+export SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+. $SCRIPT_DIR/../utils.sh
 
 build_extracts() {
   pmtiles extract ../osm-vector/openstreetmap-openmaptiles.pmtiles openstreetmap-openmaptiles.pmtiles --bbox=8.508911,46.276733,10.681458,47.927386
