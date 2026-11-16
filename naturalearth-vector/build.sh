@@ -724,6 +724,12 @@ name_zht
 
       ./add_way_area.js $schema-geojsonprep/$source.json
       ./add_wikidata_languages.js $schema-geojsonprep/$source.json
+
+      # CLDR has curated country names; use them after the Wikidata merge so
+      # they also win over a less suitable Wikidata native label.
+      if [[ "$source" == *"admin_0_countries"* ]]; then
+        ./add_cldr_territory_names.js $schema-geojsonprep/$source.json
+      fi
     fi
   }
 
